@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Random Quote Generator — Motivating, Sad, Deep, Funny Quotes</title>
+<meta name="description" content="Generate a random quote by mood, language and era: motivating, sad, thoughtful, romantic, wise or funny. Free, colorful, and endlessly shareable.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFFBF3;
+    --ink:#2A2138;
+    --ink-soft:#6b6178;
+    --line:rgba(42,33,56,0.1);
+    --blob-pink:#FF6FA5;
+    --blob-yellow:#FFC93C;
+    --blob-blue:#4EA8FF;
+    --blob-purple:#A66CFF;
+
+    --t-motivant-1:#FF7A45; --t-motivant-2:#FFC93C;
+    --t-triste-1:#5B7FFF;   --t-triste-2:#8FD3FF;
+    --t-pensif-1:#9B6BFF;   --t-pensif-2:#C9A6FF;
+    --t-amour-1:#FF5C8A;    --t-amour-2:#FFA6C1;
+    --t-sagesse-1:#18B39D;  --t-sagesse-2:#8CE0D6;
+    --t-humour-1:#FFB800;   --t-humour-2:#FFE066;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    position:relative;
+    overflow-x:hidden;
+  }
+  .blob{
+    position:fixed;
+    border-radius:50%;
+    filter:blur(70px);
+    opacity:.35;
+    z-index:0;
+    animation:drift 18s ease-in-out infinite alternate;
+  }
+  .blob1{width:420px;height:420px;background:var(--blob-pink);top:-120px;left:-100px;}
+  .blob2{width:380px;height:380px;background:var(--blob-blue);top:200px;right:-140px;animation-delay:-4s;}
+  .blob3{width:340px;height:340px;background:var(--blob-yellow);bottom:0;left:10%;animation-delay:-9s;}
+  .blob4{width:300px;height:300px;background:var(--blob-purple);bottom:-100px;right:15%;animation-delay:-13s;}
+  @keyframes drift{
+    from{transform:translate(0,0) scale(1);}
+    to{transform:translate(30px,-25px) scale(1.08);}
+  }
+  @media (prefers-reduced-motion: reduce){ .blob{animation:none;} }
+
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;position:relative;z-index:1;}
+
+  /* ---------- Header ---------- */
+  header{padding:56px 0 28px; text-align:center;}
+  .eyebrow{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:#B8862E;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:#FFF3D6;
+    padding:6px 14px;
+    border-radius:999px;
+  }
+  h1{
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:clamp(32px, 6vw, 54px);
+    line-height:1.08;
+    margin:18px 0 14px;
+  }
+  h1 .grad{
+    background:linear-gradient(90deg, var(--blob-pink), var(--blob-purple), var(--blob-blue));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .sub{
+    font-size:16.5px;
+    color:var(--ink-soft);
+    max-width:52ch;
+    line-height:1.55;
+    margin:0 auto;
+  }
+
+  /* ---------- Ad slots ---------- */
+  .ad-slot{
+    border:1.5px dashed rgba(42,33,56,0.18);
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:rgba(42,33,56,0.4);
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    background:rgba(255,255,255,0.5);
+  }
+  .ad-slot--banner{height:90px;margin:30px 0;}
+  .ad-slot--inline{height:110px;margin:40px 0;}
+  .ad-slot--footer{height:90px;margin:40px 0 10px;}
+
+  /* ---------- Controls ---------- */
+  .panel{
+    background:#fff;
+    border-radius:20px;
+    padding:22px;
+    box-shadow:0 16px 40px -18px rgba(42,33,56,0.25);
+  }
+  .controls{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:12px;
+    margin-bottom:16px;
+  }
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  select{
+    appearance:none;
+    -webkit-appearance:none;
+    background:#F7F2FF;
+    border:2px solid transparent;
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    font-size:14.5px;
+    font-weight:600;
+    padding:12px 34px 12px 14px;
+    border-radius:12px;
+    cursor:pointer;
+    background-image:linear-gradient(45deg, transparent 50%, var(--blob-purple) 50%), linear-gradient(135deg, var(--blob-purple) 50%, transparent 50%);
+    background-position: calc(100% - 18px) center, calc(100% - 13px) center;
+    background-size:5px 5px, 5px 5px;
+    background-repeat:no-repeat;
+    transition:border-color .15s ease, transform .1s ease;
+  }
+  select:hover{border-color:var(--blob-purple);}
+  select:focus-visible{outline:2px solid var(--blob-blue); outline-offset:2px;}
+
+  .generate-row{display:flex;gap:12px;}
+  button{
+    font-family:'Inter', sans-serif;
+    font-weight:700;
+    font-size:15px;
+    border-radius:12px;
+    border:none;
+    cursor:pointer;
+    padding:14px 22px;
+    transition:transform .12s ease, box-shadow .12s ease, background .15s ease;
+  }
+  button:focus-visible{outline:2px solid var(--blob-blue); outline-offset:2px;}
+  .btn-primary{
+    flex:1;
+    background:linear-gradient(90deg, var(--blob-pink), var(--blob-purple));
+    color:#fff;
+    letter-spacing:.01em;
+  }
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 10px 24px -6px rgba(166,108,255,0.55);}
+  .btn-primary:active{transform:translateY(0);}
+  .btn-ghost{
+    background:#F7F2FF;
+    color:var(--ink);
+  }
+  .btn-ghost:hover{background:#EFE4FF;}
+
+  /* ---------- Quote card ---------- */
+  .stage{margin:22px 0 6px;}
+  .card{
+    position:relative;
+    background:#fff;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 24px 50px -20px rgba(42,33,56,0.35);
+    transition:transform .3s cubic-bezier(.2,.8,.2,1), opacity .28s ease;
+  }
+  .card.shuffling{transform:rotate(-1.5deg) scale(.97); opacity:.45;}
+  .card-header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:18px 24px;
+    background:linear-gradient(120deg, var(--accent-1), var(--accent-2));
+    color:#fff;
+  }
+  .card-emoji{font-size:28px; line-height:1;}
+  .card-header-label{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    letter-spacing:.01em;
+  }
+  .card-body{padding:36px 28px 30px;}
+  .quote-text{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:clamp(20px, 3.4vw, 27px);
+    line-height:1.42;
+    margin:0 0 20px;
+    color:var(--ink);
+  }
+  .quote-meta{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .tag{
+    background:#F7F2FF;
+    padding:4px 10px;
+    border-radius:20px;
+  }
+  .card-actions{display:flex; gap:10px; margin-top:22px;}
+  .icon-btn{
+    background:#F7F2FF;
+    border:none;
+    color:var(--ink);
+    font-size:12.5px;
+    font-weight:700;
+    padding:10px 16px;
+  }
+  .icon-btn:hover{background:#EFE4FF;}
+
+  .toast{
+    position:fixed;
+    bottom:24px; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--ink);
+    color:#fff;
+    font-weight:600;
+    font-size:14px;
+    padding:10px 18px;
+    border-radius:10px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    z-index:10;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* ---------- Sections below ---------- */
+  section.block{margin:64px 0;}
+  .block-eyebrow{
+    font-family:'Space Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--blob-purple);
+    margin-bottom:8px;
+  }
+  .block h2{
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size:clamp(24px, 4vw, 32px);
+    margin:0 0 20px;
+  }
+
+  .facts-grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:16px;
+  }
+  .fact-card{
+    background:#fff;
+    border-radius:16px;
+    padding:20px 22px;
+    box-shadow:0 10px 28px -16px rgba(42,33,56,0.25);
+  }
+  .fact-card .fact-icon{font-size:22px; margin-bottom:10px; display:block;}
+  .fact-card p{margin:0; font-size:14.5px; line-height:1.6; color:var(--ink-soft);}
+  .fact-card strong{color:var(--ink);}
+
+  .faq-item{
+    background:#fff;
+    border-radius:14px;
+    margin-bottom:10px;
+    overflow:hidden;
+    box-shadow:0 8px 22px -16px rgba(42,33,56,0.2);
+  }
+  .faq-item summary{
+    cursor:pointer;
+    padding:16px 20px;
+    font-weight:700;
+    font-family:'Fredoka', sans-serif;
+    font-size:15.5px;
+    list-style:none;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .faq-item summary::-webkit-details-marker{display:none;}
+  .faq-item summary::after{
+    content:"+";
+    font-size:20px;
+    color:var(--blob-purple);
+    transition:transform .2s ease;
+  }
+  .faq-item[open] summary::after{transform:rotate(45deg);}
+  .faq-item p{
+    margin:0;
+    padding:0 20px 18px;
+    color:var(--ink-soft);
+    font-size:14.5px;
+    line-height:1.6;
+  }
+
+  .about-block{
+    background:linear-gradient(120deg, #FFF0D6, #FFE4EF);
+    border-radius:20px;
+    padding:34px 30px;
+  }
+  .about-block p{
+    font-size:16px;
+    line-height:1.7;
+    color:var(--ink);
+    margin:0 0 14px;
+  }
+  .about-block p:last-child{margin-bottom:0;}
+  .about-block strong{color:var(--t-amour-1);}
+
+  footer{
+    border-top:1px solid var(--line);
+    padding:26px 0 50px;
+    color:var(--ink-soft);
+    font-size:13px;
+    line-height:1.6;
+  }
+  footer strong{color:var(--ink);}
+
+  @media (max-width:640px){
+    .controls{grid-template-columns:1fr;}
+    .facts-grid{grid-template-columns:1fr;}
+    .card-body{padding:28px 20px 26px;}
+  }
+</style>
+</head>
+<body>
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="blob blob3"></div>
+<div class="blob blob4"></div>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">✨ Random Quote Generator</div>
+    <h1>A quote for <span class="grad">every mood</span>,<br>every time.</h1>
+    <p class="sub">Pick a mood, a language and an era — get a fresh quote to keep, share, or screenshot into your story.</p>
+  </header>
+
+  <div class="ad-slot ad-slot--banner">Ad placeholder — 728×90 banner</div>
+
+  <div class="panel">
+    <div class="controls">
+      <div class="field">
+        <label for="theme">Mood</label>
+        <select id="theme">
+          <option value="motivant">🔥 Motivating</option>
+          <option value="triste">😢 Sad</option>
+          <option value="pensif">🤔 Thoughtful</option>
+          <option value="amour">❤️ Love</option>
+          <option value="sagesse">🦉 Wise</option>
+          <option value="humour">😂 Funny</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="langue">Language</label>
+        <select id="langue">
+          <option value="en" selected>English</option>
+          <option value="fr">French</option>
+          <option value="es">Spanish</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="epoque">Era</label>
+        <select id="epoque">
+          <option value="classique">Classic</option>
+          <option value="moderne">Modern</option>
+        </select>
+      </div>
+    </div>
+    <div class="generate-row">
+      <button class="btn-primary" id="generateBtn">Generate a quote</button>
+      <button class="btn-ghost" id="surpriseBtn" title="Random mood, language and era">Surprise me</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="card" id="card" style="--accent-1: var(--t-motivant-1); --accent-2: var(--t-motivant-2);">
+      <div class="card-header">
+        <span class="card-emoji" id="cardEmoji">🔥</span>
+        <span class="card-header-label" id="cardHeaderLabel">Motivating</span>
+      </div>
+      <div class="card-body">
+        <p class="quote-text" id="quoteText">Stop waiting for motivation. Discipline shows up even when it doesn't.</p>
+        <div class="quote-meta">
+          <span class="tag" id="tagLangue">EN</span>
+          <span class="tag" id="tagEpoque">Modern</span>
+        </div>
+        <div class="card-actions">
+          <button class="icon-btn" id="copyBtn">Copy</button>
+          <button class="icon-btn" id="shareBtn">Share</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ad-slot ad-slot--inline">Ad placeholder — 300×250 native</div>
+
+  <section class="block" id="facts">
+    <div class="block-eyebrow">Did you know?</div>
+    <h2>Quote trivia worth knowing</h2>
+    <div class="facts-grid">
+      <div class="fact-card">
+        <span class="fact-icon">📖</span>
+        <p><strong>Marcus Aurelius never meant to publish anything.</strong> His "Meditations" were private notes he wrote to himself as a Roman emperor — historians believe he had no idea they'd still be read two thousand years later.</p>
+      </div>
+      <div class="fact-card">
+        <span class="fact-icon">🎤</span>
+        <p><strong>Einstein's most quoted line came from an interview, not a paper.</strong> His idea that imagination matters more than knowledge was said off the cuff to a journalist in 1929 — not written in any of his scientific work.</p>
+      </div>
+      <div class="fact-card">
+        <span class="fact-icon">🕊️</span>
+        <p><strong>"Be the change" is a shortened version.</strong> Gandhi scholars point out his actual words were longer and more nuanced — the punchy short form was popularized decades after his death.</p>
+      </div>
+      <div class="fact-card">
+        <span class="fact-icon">🏛️</span>
+        <p><strong>Winston Churchill is one of history's most misquoted people.</strong> Historians estimate a huge share of quotes attributed to him online were never actually said by him at all.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="faq">
+    <div class="block-eyebrow">Questions</div>
+    <h2>FAQ</h2>
+
+    <details class="faq-item" open>
+      <summary>Can a random quote actually motivate you?</summary>
+      <p>More often than you'd think. Motivation rarely shows up with a plan — it usually catches you off guard. A single unexpected line, read at the right moment, can work as well as a long pep talk. That's the whole idea behind hitting "generate."</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Are these quotes from real people?</summary>
+      <p>No — every quote on this site is an original line written for this generator, not pulled from real authors. That way you always get something fresh, with zero risk of a misattributed quote floating around.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Can I share these quotes on social media?</summary>
+      <p>Absolutely — that's what the Copy and Share buttons are for. Screenshot the card, repost it, or paste the text wherever you like.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>Why does the card change color for each mood?</summary>
+      <p>Because moods aren't one-size-fits-all. Each theme gets its own color and emoji so the card actually feels like the emotion it's carrying, instead of looking the same no matter what you pick.</p>
+    </details>
+
+    <details class="faq-item">
+      <summary>How often are new quotes added?</summary>
+      <p>The collection keeps growing across every mood, language and era — check back for more.</p>
+    </details>
+  </section>
+
+  <section class="block about-block">
+    <p><strong>This site is proof of something simple:</strong> you don't need the perfect plan to start — you just need one small push. Every quote here was written to remind you that motivation isn't a personality trait, it's a habit you build one nudge at a time.</p>
+    <p>Hit generate, take the line that lands, and go do the thing you've been putting off. If a random button can talk you into starting — imagine what you can do once you actually begin.</p>
+  </section>
+
+  <footer>
+    <strong>Random Quote Generator</strong> — a new angle every time you click.<br>
+    Every quote on this site is an original creation, not attributed to real authors.
+  </footer>
+
+  <div class="ad-slot ad-slot--footer">Ad placeholder — footer</div>
+
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+const QUOTES = [
+  // ---------- FR ----------
+  {text:"Celui qui doute de ses forces n'a pas encore commencé à les chercher.", theme:"motivant", lang:"fr", era:"classique"},
+  {text:"Le courage ne rugit pas toujours ; parfois, il se contente de se lever demain matin.", theme:"motivant", lang:"fr", era:"classique"},
+  {text:"Avance. Le doute ne construit rien, il ne fait qu'attendre.", theme:"motivant", lang:"fr", era:"moderne"},
+  {text:"Ta seule obligation aujourd'hui : faire un pas de plus qu'hier.", theme:"motivant", lang:"fr", era:"moderne"},
+  {text:"Il y a des silences qui pèsent plus lourd que tous les mots jamais prononcés.", theme:"triste", lang:"fr", era:"classique"},
+  {text:"On pleure rarement ce qu'on a perdu ; on pleure ce qu'on n'a jamais eu le temps de garder.", theme:"triste", lang:"fr", era:"classique"},
+  {text:"Certains jours, sourire est le seul mensonge qu'on sait encore bien raconter.", theme:"triste", lang:"fr", era:"moderne"},
+  {text:"On s'habitue à l'absence comme à un bruit de fond qu'on finit par ne plus entendre.", theme:"triste", lang:"fr", era:"moderne"},
+  {text:"Le temps ne guérit pas les blessures, il apprend seulement à vivre avec elles.", theme:"pensif", lang:"fr", era:"classique"},
+  {text:"Nul ne se baigne deux fois dans le même silence.", theme:"pensif", lang:"fr", era:"classique"},
+  {text:"On passe sa vie à scroller devant des réponses qu'on n'a jamais cherchées.", theme:"pensif", lang:"fr", era:"moderne"},
+  {text:"Réfléchir, c'est accepter de ne pas savoir encore.", theme:"pensif", lang:"fr", era:"moderne"},
+  {text:"Aimer, c'est offrir à l'autre la clé d'une maison qu'on n'a pas fini de bâtir.", theme:"amour", lang:"fr", era:"classique"},
+  {text:"Il n'est de plus grand voyage que celui de deux regards qui se reconnaissent.", theme:"amour", lang:"fr", era:"classique"},
+  {text:"T'aimer, c'est simple : c'est choisir ton message avant tous les autres.", theme:"amour", lang:"fr", era:"moderne"},
+  {text:"L'amour, aujourd'hui, c'est rester quand un clic suffirait pour partir.", theme:"amour", lang:"fr", era:"moderne"},
+  {text:"La sagesse commence le jour où l'on cesse de vouloir avoir raison.", theme:"sagesse", lang:"fr", era:"classique"},
+  {text:"Qui connaît les autres est savant ; qui se connaît lui-même est sage.", theme:"sagesse", lang:"fr", era:"classique"},
+  {text:"Le vrai luxe, aujourd'hui, c'est de savoir ne pas répondre tout de suite.", theme:"sagesse", lang:"fr", era:"moderne"},
+  {text:"Être sage, c'est choisir ses batailles et fermer les autres onglets.", theme:"sagesse", lang:"fr", era:"moderne"},
+  {text:"L'homme sage évite les ennuis que l'homme malin sait éviter d'avoir causés.", theme:"humour", lang:"fr", era:"classique"},
+  {text:"Il vaut mieux rire de ses erreurs avant que les autres n'en aient le temps.", theme:"humour", lang:"fr", era:"classique"},
+  {text:"Mon niveau d'énergie fonctionne à deux vitesses : café ou catastrophe.", theme:"humour", lang:"fr", era:"moderne"},
+  {text:"J'ai un plan pour aujourd'hui. Il s'appelle improviser avec assurance.", theme:"humour", lang:"fr", era:"moderne"},
+  {text:"Un rêve sans action n'est qu'un souhait qui attend.", theme:"motivant", lang:"fr", era:"classique"},
+  {text:"On ne rate pas ses chances, on les remet simplement à plus tard.", theme:"motivant", lang:"fr", era:"moderne"},
+  {text:"La difficulté d'aujourd'hui est la force que tu n'avais pas hier.", theme:"motivant", lang:"fr", era:"classique"},
+  {text:"Le cœur garde en mémoire ce que la raison a déjà oublié.", theme:"triste", lang:"fr", era:"classique"},
+  {text:"Parfois on n'est pas triste, on est juste fatigué de faire semblant.", theme:"triste", lang:"fr", era:"moderne"},
+  {text:"L'absence a ceci de cruel qu'elle ne prévient jamais avant de s'installer.", theme:"triste", lang:"fr", era:"classique"},
+  {text:"On ne choisit pas ses pensées de la nuit, elles nous choisissent.", theme:"pensif", lang:"fr", era:"classique"},
+  {text:"Chaque notification est une petite décision qu'on ne se souvient pas d'avoir prise.", theme:"pensif", lang:"fr", era:"moderne"},
+  {text:"Comprendre, c'est déjà commencer à pardonner.", theme:"pensif", lang:"fr", era:"classique"},
+  {text:"On ne tombe pas amoureux, on se laisse simplement porter.", theme:"amour", lang:"fr", era:"classique"},
+  {text:"Aimer quelqu'un aujourd'hui, c'est répondre avant que le message ne devienne vieux.", theme:"amour", lang:"fr", era:"moderne"},
+  {text:"Il y a des présences qui rendent le silence plus doux que n'importe quel mot.", theme:"amour", lang:"fr", era:"classique"},
+  {text:"La patience n'est pas d'attendre, c'est de rester bien pendant qu'on attend.", theme:"sagesse", lang:"fr", era:"classique"},
+  {text:"Le vrai contrôle, c'est de savoir quand ne rien faire.", theme:"sagesse", lang:"fr", era:"moderne"},
+  {text:"On apprend plus de ses silences que de ses discours.", theme:"sagesse", lang:"fr", era:"classique"},
+  {text:"Je ne suis pas en retard, je teste juste la patience des autres.", theme:"humour", lang:"fr", era:"moderne"},
+  {text:"Mon plus grand talent, c'est de transformer un café en décisions à peu près raisonnables.", theme:"humour", lang:"fr", era:"moderne"},
+  {text:"L'optimisme, c'est croire que demain le réveil sonnera moins fort.", theme:"humour", lang:"fr", era:"classique"},
+
+  // ---------- EN ----------
+  {text:"Those who wait for perfect conditions will wait for the rest of their lives.", theme:"motivant", lang:"en", era:"classique"},
+  {text:"Strength is not the absence of fear, but the will that outlasts it.", theme:"motivant", lang:"en", era:"classique"},
+  {text:"Stop waiting for motivation. Discipline shows up even when it doesn't.", theme:"motivant", lang:"en", era:"moderne"},
+  {text:"Small steps still count as progress, even the ones nobody claps for.", theme:"motivant", lang:"en", era:"moderne"},
+  {text:"Some sorrows are too quiet to be named, so they simply stay.", theme:"triste", lang:"en", era:"classique"},
+  {text:"We do not mourn what we lost, but what we never had time to keep.", theme:"triste", lang:"en", era:"classique"},
+  {text:"Some days the smile is just the outfit grief decided to wear.", theme:"triste", lang:"en", era:"moderne"},
+  {text:"I got used to your absence the way you get used to bad wifi — annoyed, but not surprised anymore.", theme:"triste", lang:"en", era:"moderne"},
+  {text:"Time does not heal wounds; it only teaches us to carry them differently.", theme:"pensif", lang:"en", era:"classique"},
+  {text:"The mind that questions everything eventually questions itself.", theme:"pensif", lang:"en", era:"classique"},
+  {text:"We spend our lives scrolling past the answers we never actually looked for.", theme:"pensif", lang:"en", era:"moderne"},
+  {text:"Thinking is just the polite word for admitting you don't know yet.", theme:"pensif", lang:"en", era:"moderne"},
+  {text:"To love is to hand someone the key to a house still being built.", theme:"amour", lang:"en", era:"classique"},
+  {text:"No journey is greater than two glances that finally recognize each other.", theme:"amour", lang:"en", era:"classique"},
+  {text:"Loving you is simple: it's choosing your text before all the others.", theme:"amour", lang:"en", era:"moderne"},
+  {text:"Love today means staying when leaving was one tap away.", theme:"amour", lang:"en", era:"moderne"},
+  {text:"Wisdom begins the day we stop needing to be right.", theme:"sagesse", lang:"en", era:"classique"},
+  {text:"He who knows others is clever; he who knows himself is wise.", theme:"sagesse", lang:"en", era:"classique"},
+  {text:"Real luxury today is knowing you don't have to reply right away.", theme:"sagesse", lang:"en", era:"moderne"},
+  {text:"Being wise means picking your battles and closing the other tabs.", theme:"sagesse", lang:"en", era:"moderne"},
+  {text:"The wise man avoids troubles the clever man forgot he caused.", theme:"humour", lang:"en", era:"classique"},
+  {text:"Better to laugh at your mistakes before someone else gets the chance.", theme:"humour", lang:"en", era:"classique"},
+  {text:"My energy levels run on two settings: coffee or chaos.", theme:"humour", lang:"en", era:"moderne"},
+  {text:"I have a plan for today. It's called winging it with confidence.", theme:"humour", lang:"en", era:"moderne"},
+  {text:"A dream without action is just a wish waiting around.", theme:"motivant", lang:"en", era:"classique"},
+  {text:"You don't miss your chances, you just keep postponing them.", theme:"motivant", lang:"en", era:"moderne"},
+  {text:"Today's difficulty is the strength you didn't have yesterday.", theme:"motivant", lang:"en", era:"classique"},
+  {text:"The heart remembers what reason has already forgotten.", theme:"triste", lang:"en", era:"classique"},
+  {text:"Sometimes you're not sad, you're just tired of pretending.", theme:"triste", lang:"en", era:"moderne"},
+  {text:"Absence is cruel because it never warns you before it moves in.", theme:"triste", lang:"en", era:"classique"},
+  {text:"We don't choose our night thoughts, they choose us.", theme:"pensif", lang:"en", era:"classique"},
+  {text:"Every notification is a tiny decision we don't remember making.", theme:"pensif", lang:"en", era:"moderne"},
+  {text:"To understand is already to begin forgiving.", theme:"pensif", lang:"en", era:"classique"},
+  {text:"You don't fall in love, you just let yourself be carried.", theme:"amour", lang:"en", era:"classique"},
+  {text:"Loving someone today means replying before the message goes cold.", theme:"amour", lang:"en", era:"moderne"},
+  {text:"Some presences make silence softer than any word could.", theme:"amour", lang:"en", era:"classique"},
+  {text:"Patience isn't waiting, it's staying calm while you wait.", theme:"sagesse", lang:"en", era:"classique"},
+  {text:"Real control is knowing when to do nothing.", theme:"sagesse", lang:"en", era:"moderne"},
+  {text:"We learn more from our silences than our speeches.", theme:"sagesse", lang:"en", era:"classique"},
+  {text:"I'm not late, I'm testing everyone else's patience.", theme:"humour", lang:"en", era:"moderne"},
+  {text:"My greatest talent is turning coffee into mostly reasonable decisions.", theme:"humour", lang:"en", era:"moderne"},
+  {text:"Optimism is believing tomorrow's alarm will be a little quieter.", theme:"humour", lang:"en", era:"classique"},
+
+  // ---------- ES ----------
+  {text:"Quien espera condiciones perfectas esperará toda la vida.", theme:"motivant", lang:"es", era:"classique"},
+  {text:"La fuerza no es la ausencia de miedo, sino la voluntad que lo sobrevive.", theme:"motivant", lang:"es", era:"classique"},
+  {text:"Deja de esperar motivación. La disciplina aparece incluso cuando ella no.", theme:"motivant", lang:"es", era:"moderne"},
+  {text:"Los pasos pequeños también cuentan, aunque nadie los aplauda.", theme:"motivant", lang:"es", era:"moderne"},
+  {text:"Hay silencios demasiado callados para tener nombre, así que se quedan.", theme:"triste", lang:"es", era:"classique"},
+  {text:"No lloramos lo que perdimos, sino lo que nunca tuvimos tiempo de guardar.", theme:"triste", lang:"es", era:"classique"},
+  {text:"Algunos días la sonrisa es solo el disfraz que elige la tristeza.", theme:"triste", lang:"es", era:"moderne"},
+  {text:"Me acostumbré a tu ausencia como al mal wifi: molesto, pero ya no sorprendido.", theme:"triste", lang:"es", era:"moderne"},
+  {text:"El tiempo no cura las heridas, solo enseña a llevarlas de otra forma.", theme:"pensif", lang:"es", era:"classique"},
+  {text:"La mente que todo lo cuestiona termina por cuestionarse a sí misma.", theme:"pensif", lang:"es", era:"classique"},
+  {text:"Pasamos la vida deslizando el dedo sobre respuestas que nunca buscamos.", theme:"pensif", lang:"es", era:"moderne"},
+  {text:"Pensar es solo la forma educada de admitir que aún no sabes.", theme:"pensif", lang:"es", era:"moderne"},
+  {text:"Amar es entregar la llave de una casa que aún se está construyendo.", theme:"amour", lang:"es", era:"classique"},
+  {text:"No hay viaje más grande que dos miradas que por fin se reconocen.", theme:"amour", lang:"es", era:"classique"},
+  {text:"Quererte es simple: es elegir tu mensaje antes que todos los demás.", theme:"amour", lang:"es", era:"moderne"},
+  {text:"Hoy el amor es quedarse cuando irse costaba un solo clic.", theme:"amour", lang:"es", era:"moderne"},
+  {text:"La sabiduría empieza el día en que dejamos de necesitar tener razón.", theme:"sagesse", lang:"es", era:"classique"},
+  {text:"Quien conoce a los demás es inteligente; quien se conoce a sí mismo es sabio.", theme:"sagesse", lang:"es", era:"classique"},
+  {text:"El verdadero lujo hoy es saber que no tienes que responder de inmediato.", theme:"sagesse", lang:"es", era:"moderne"},
+  {text:"Ser sabio es elegir tus batallas y cerrar las demás pestañas.", theme:"sagesse", lang:"es", era:"moderne"},
+  {text:"El sabio evita los problemas que el listo olvidó haber causado.", theme:"humour", lang:"es", era:"classique"},
+  {text:"Mejor reírse de los propios errores antes de que otros lo hagan.", theme:"humour", lang:"es", era:"classique"},
+  {text:"Mi nivel de energía tiene dos modos: café o caos.", theme:"humour", lang:"es", era:"moderne"},
+  {text:"Tengo un plan para hoy. Se llama improvisar con confianza.", theme:"humour", lang:"es", era:"moderne"},
+  {text:"Un sueño sin acción es solo un deseo que espera.", theme:"motivant", lang:"es", era:"classique"},
+  {text:"No pierdes tus oportunidades, solo las sigues aplazando.", theme:"motivant", lang:"es", era:"moderne"},
+  {text:"La dificultad de hoy es la fuerza que no tenías ayer.", theme:"motivant", lang:"es", era:"classique"},
+  {text:"El corazón recuerda lo que la razón ya olvidó.", theme:"triste", lang:"es", era:"classique"},
+  {text:"A veces no estás triste, solo cansado de fingir.", theme:"triste", lang:"es", era:"moderne"},
+  {text:"La ausencia es cruel porque nunca avisa antes de instalarse.", theme:"triste", lang:"es", era:"classique"},
+  {text:"No elegimos nuestros pensamientos nocturnos, ellos nos eligen a nosotros.", theme:"pensif", lang:"es", era:"classique"},
+  {text:"Cada notificación es una pequeña decisión que no recordamos haber tomado.", theme:"pensif", lang:"es", era:"moderne"},
+  {text:"Comprender ya es empezar a perdonar.", theme:"pensif", lang:"es", era:"classique"},
+  {text:"No te enamoras, simplemente te dejas llevar.", theme:"amour", lang:"es", era:"classique"},
+  {text:"Querer a alguien hoy es responder antes de que el mensaje se enfríe.", theme:"amour", lang:"es", era:"moderne"},
+  {text:"Hay presencias que hacen el silencio más suave que cualquier palabra.", theme:"amour", lang:"es", era:"classique"},
+  {text:"La paciencia no es esperar, es mantener la calma mientras esperas.", theme:"sagesse", lang:"es", era:"classique"},
+  {text:"El verdadero control es saber cuándo no hacer nada.", theme:"sagesse", lang:"es", era:"moderne"},
+  {text:"Aprendemos más de nuestros silencios que de nuestros discursos.", theme:"sagesse", lang:"es", era:"classique"},
+  {text:"No llego tarde, solo pongo a prueba la paciencia de los demás.", theme:"humour", lang:"es", era:"moderne"},
+  {text:"Mi mayor talento es convertir café en decisiones más o menos razonables.", theme:"humour", lang:"es", era:"moderne"},
+  {text:"El optimismo es creer que la alarma de mañana sonará un poco más floja.", theme:"humour", lang:"es", era:"classique"},
+];
+
+const THEME_LABELS = {motivant:"Motivating", triste:"Sad", pensif:"Thoughtful", amour:"Love", sagesse:"Wise", humour:"Funny"};
+const THEME_EMOJI = {motivant:"🔥", triste:"😢", pensif:"🤔", amour:"❤️", sagesse:"🦉", humour:"😂"};
+const LANG_LABELS = {fr:"FR", en:"EN", es:"ES"};
+const ERA_LABELS = {classique:"Classic", moderne:"Modern"};
+
+const el = {
+  theme: document.getElementById('theme'),
+  langue: document.getElementById('langue'),
+  epoque: document.getElementById('epoque'),
+  card: document.getElementById('card'),
+  cardEmoji: document.getElementById('cardEmoji'),
+  cardHeaderLabel: document.getElementById('cardHeaderLabel'),
+  quoteText: document.getElementById('quoteText'),
+  tagLangue: document.getElementById('tagLangue'),
+  tagEpoque: document.getElementById('tagEpoque'),
+  generateBtn: document.getElementById('generateBtn'),
+  surpriseBtn: document.getElementById('surpriseBtn'),
+  copyBtn: document.getElementById('copyBtn'),
+  shareBtn: document.getElementById('shareBtn'),
+  toast: document.getElementById('toast'),
+};
+
+function pickQuote(theme, lang, era){
+  let pool = QUOTES.filter(q => q.theme===theme && q.lang===lang && q.era===era);
+  if(pool.length === 0){ pool = QUOTES.filter(q => q.theme===theme && q.lang===lang); }
+  if(pool.length === 0){ pool = QUOTES.filter(q => q.lang===lang); }
+  let idx = Math.floor(Math.random()*pool.length);
+  if(pool.length > 1){
+    let tries = 0;
+    while(pool[idx].text === el.quoteText.textContent && tries < 6){
+      idx = Math.floor(Math.random()*pool.length);
+      tries++;
+    }
+  }
+  return pool[idx];
+}
+
+function renderQuote(q){
+  el.card.style.setProperty('--accent-1', `var(--t-${q.theme}-1)`);
+  el.card.style.setProperty('--accent-2', `var(--t-${q.theme}-2)`);
+  el.cardEmoji.textContent = THEME_EMOJI[q.theme];
+  el.cardHeaderLabel.textContent = THEME_LABELS[q.theme];
+  el.quoteText.textContent = q.text;
+  el.tagLangue.textContent = LANG_LABELS[q.lang];
+  el.tagEpoque.textContent = ERA_LABELS[q.era];
+}
+
+function generate(){
+  const theme = el.theme.value;
+  const lang = el.langue.value;
+  const era = el.epoque.value;
+
+  el.card.classList.add('shuffling');
+  window.setTimeout(() => {
+    const q = pickQuote(theme, lang, era);
+    renderQuote(q);
+    el.card.classList.remove('shuffling');
+  }, 200);
+}
+
+function surprise(){
+  const themes = Object.keys(THEME_LABELS);
+  const eras = Object.keys(ERA_LABELS);
+  el.theme.value = themes[Math.floor(Math.random()*themes.length)];
+  el.epoque.value = eras[Math.floor(Math.random()*eras.length)];
+  generate();
+}
+
+function showToast(msg){
+  el.toast.textContent = msg;
+  el.toast.classList.add('show');
+  window.setTimeout(() => el.toast.classList.remove('show'), 1800);
+}
+
+el.generateBtn.addEventListener('click', generate);
+el.surpriseBtn.addEventListener('click', surprise);
+el.theme.addEventListener('change', generate);
+el.langue.addEventListener('change', generate);
+el.epoque.addEventListener('change', generate);
+
+el.copyBtn.addEventListener('click', () => {
+  navigator.clipboard.writeText(el.quoteText.textContent).then(() => {
+    showToast('Copied!');
+  }).catch(() => { showToast('Could not copy'); });
+});
+
+el.shareBtn.addEventListener('click', () => {
+  const text = el.quoteText.textContent;
+  if(navigator.share){
+    navigator.share({text}).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text).then(() => showToast('Copied for sharing!'));
+  }
+});
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
