@@ -361,7 +361,92 @@
     .controls{grid-template-columns:1fr;}
     .facts-grid{grid-template-columns:1fr;}
     .card-body{padding:28px 20px 26px;}
+  }  .icon-btn--accent{
+    background:linear-gradient(90deg, var(--blob-pink), var(--blob-purple));
+    color:#fff;
   }
+  .icon-btn--accent:hover{opacity:.92; background:linear-gradient(90deg, var(--blob-pink), var(--blob-purple));}
+
+  /* ---------- Image modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(42,33,56,0.55);
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    padding:24px 16px;
+    overflow-y:auto;
+    z-index:100;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:#fff;
+    border-radius:20px;
+    padding:22px;
+    max-width:440px;
+    width:100%;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.4);
+  }
+  .modal-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .modal-header h3{
+    font-family:'Fredoka', sans-serif;
+    font-size:18px;
+    margin:0;
+  }
+  .modal-close{
+    background:#F7F2FF;
+    border:none;
+    width:32px; height:32px;
+    border-radius:50%;
+    font-size:16px;
+    cursor:pointer;
+    color:var(--ink);
+  }
+  .canvas-wrap{
+    background:#F7F2FF;
+    border-radius:14px;
+    padding:10px;
+    margin-bottom:16px;
+  }
+  #shareCanvas{
+    width:100%;
+    height:auto;
+    display:block;
+    border-radius:8px;
+  }
+  .bg-label{
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:8px;
+  }
+  .swatches{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:8px;
+    margin-bottom:18px;
+  }
+  .swatch{
+    height:40px;
+    border-radius:10px;
+    border:2px solid transparent;
+    cursor:pointer;
+    padding:0;
+  }
+  .swatch.active{border-color:var(--ink);}
+  .modal-download{
+    width:100%;
+    background:linear-gradient(90deg, var(--blob-pink), var(--blob-purple));
+    color:#fff;
+  }
+  .modal-download:hover{transform:translateY(-2px);}
 </style>
 </head>
 <body>
@@ -440,6 +525,7 @@
         <div class="card-actions">
           <button class="icon-btn" id="copyBtn">Copy</button>
           <button class="icon-btn" id="shareBtn">Share</button>
+          <button class="icon-btn icon-btn--accent" id="imageBtn">🖼️ Create image</button>
         </div>
       </div>
     </div>
@@ -535,6 +621,21 @@
 </div>
 
 <div class="toast" id="toast">Copied!</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Create your image</h3>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="shareCanvas" width="1000" height="1250"></canvas>
+    </div>
+    <div class="bg-label">Choose a background</div>
+    <div class="swatches" id="swatches"></div>
+    <button class="modal-download" id="downloadBtn">Download image</button>
+  </div>
+</div>
 
 <script>
 const QUOTES = [
@@ -764,6 +865,121 @@ el.shareBtn.addEventListener('click', () => {
   } else {
     navigator.clipboard.writeText(text).then(() => showToast('Copied for sharing!'));
   }
+});
+
+/* ---------- Shareable image generator ---------- */
+const BACKGROUNDS = [
+  {name:"Sunset", type:"gradient", colors:["#FF7A45","#FFC93C"], text:"#2A2138"},
+  {name:"Ocean", type:"gradient", colors:["#5B7FFF","#8FD3FF"], text:"#ffffff"},
+  {name:"Berry", type:"gradient", colors:["#9B6BFF","#FF5C8A"], text:"#ffffff"},
+  {name:"Mint", type:"gradient", colors:["#18B39D","#8CE0D6"], text:"#0f2422"},
+  {name:"Noir", type:"solid", colors:["#1C1620"], text:"#ffffff"},
+  {name:"Paper", type:"solid", colors:["#F3EDE0"], text:"#2A2138"},
+  {name:"Gold", type:"gradient", colors:["#FFB800","#FFE066"], text:"#2A2138"},
+  {name:"Midnight", type:"gradient", colors:["#2A2138","#5B3E8C"], text:"#ffffff"},
+];
+let selectedBg = 0;
+const canvas = document.getElementById('shareCanvas');
+const ctx = canvas.getContext('2d');
+const WATERMARK = "quote-maker-navy.vercel.app";
+
+function wrapText(context, text, maxWidth){
+  const words = text.split(' ');
+  const lines = [];
+  let line = '';
+  for(const word of words){
+    const test = line ? line + ' ' + word : word;
+    if(context.measureText(test).width > maxWidth && line){
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  }
+  if(line) lines.push(line);
+  return lines;
+}
+
+function drawCard(){
+  const bg = BACKGROUNDS[selectedBg];
+  const w = canvas.width, h = canvas.height;
+
+  if(bg.type === 'gradient'){
+    const grad = ctx.createLinearGradient(0,0,w,h);
+    grad.addColorStop(0, bg.colors[0]);
+    grad.addColorStop(1, bg.colors[1]);
+    ctx.fillStyle = grad;
+  } else {
+    ctx.fillStyle = bg.colors[0];
+  }
+  ctx.fillRect(0,0,w,h);
+
+  ctx.fillStyle = bg.text;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.font = '90px sans-serif';
+  ctx.fillText(el.cardEmoji.textContent, w/2, 190);
+
+  ctx.font = "700 56px 'Fredoka', sans-serif";
+  const maxWidth = w - 160;
+  const lines = wrapText(ctx, el.quoteText.textContent, maxWidth);
+  const lineHeight = 74;
+  const startY = h/2 - ((lines.length-1)*lineHeight)/2;
+  lines.forEach((l, i) => {
+    ctx.fillText(l, w/2, startY + i*lineHeight);
+  });
+
+  ctx.font = "600 26px 'Space Mono', monospace";
+  ctx.globalAlpha = 0.75;
+  ctx.fillText('✨ ' + WATERMARK, w/2, h - 70);
+  ctx.globalAlpha = 1;
+}
+
+function buildSwatches(){
+  const wrap = document.getElementById('swatches');
+  wrap.innerHTML = '';
+  BACKGROUNDS.forEach((bg, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'swatch' + (i === selectedBg ? ' active' : '');
+    btn.title = bg.name;
+    btn.style.background = bg.type === 'gradient'
+      ? `linear-gradient(135deg, ${bg.colors[0]}, ${bg.colors[1]})`
+      : bg.colors[0];
+    btn.addEventListener('click', () => {
+      selectedBg = i;
+      buildSwatches();
+      drawCard();
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function openModal(){
+  document.getElementById('modalOverlay').classList.add('open');
+  buildSwatches();
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(drawCard);
+  } else {
+    drawCard();
+  }
+}
+
+document.getElementById('imageBtn').addEventListener('click', openModal);
+document.getElementById('modalClose').addEventListener('click', () => {
+  document.getElementById('modalOverlay').classList.remove('open');
+});
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'modalOverlay'){
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+});
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'quote.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast('Image downloaded!');
 });
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
